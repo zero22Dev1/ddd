@@ -1,34 +1,35 @@
-## Todo-List
-https://monaski.hatenablog.com/entry/2018/07/12/214217
+Public Class Form1
+    Inherits Form
 
+    Private currentBorderColor As Color = Color.Blue ' 初期は青
 
-Imports System.Diagnostics
+    Public Sub New()
+        InitializeComponent()
+        Me.Size = New Size(800, 1280)
+        Me.FormBorderStyle = FormBorderStyle.None
+        Me.Padding = New Padding(5)
+        Me.StartPosition = FormStartPosition.CenterScreen
+    End Sub
 
-Private Sub ShowKeyboard()
-    Try
-        Process.Start("osk.exe")
-    Catch ex As Exception
-        MessageBox.Show("スクリーンキーボードを起動できません。" & vbCrLf & ex.Message)
-    End Try
-End Sub
+    ' 通知を受け取って枠線の色を変更
+    Public Sub SetStatus(status As String)
+        Select Case status.ToLower()
+            Case "normal"
+                currentBorderColor = Color.Blue
+            Case "error"
+                currentBorderColor = Color.Red
+            Case Else
+                currentBorderColor = Color.Gray ' 不明な状態
+        End Select
 
-Imports System.Diagnostics
+        Me.Invalidate() ' 再描画
+    End Sub
 
-Private Sub TextBox1_GotFocus(sender As Object, e As EventArgs) Handles TextBox1.GotFocus
-    Try
-        ' スクリーンキーボードを起動
-        Process.Start("osk.exe")
-    Catch ex As Exception
-        MessageBox.Show("スクリーンキーボードを起動できません。" & vbCrLf & ex.Message)
-    End Try
-End Sub
-
-Private Sub btnKeyboard_Click(sender As Object, e As EventArgs) Handles btnKeyboard.Click
-    ShowKeyboard()
-End Sub
-
-
-
-
-
-https://monaski.hatenablog.com/entry/2018/07/12/234948
+    ' 枠線描画
+    Protected Overrides Sub OnPaint(e As PaintEventArgs)
+        MyBase.OnPaint(e)
+        Using pen As New Pen(currentBorderColor, 5)
+            e.Graphics.DrawRectangle(pen, 0, 0, Me.ClientSize.Width - 1, Me.ClientSize.Height - 1)
+        End Using
+    End Sub
+End Class
