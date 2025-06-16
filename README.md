@@ -124,7 +124,57 @@ EXCEPTION
 END;
 
 ```
+CREATE OR REPLACE PROCEDURE update_with_lock_proc (
+    p_id         IN  NUMBER,      -- 対象レコードのID
+    p_old_value  IN  VARCHAR2,    -- 現在の期待値
+    p_new_value  IN  VARCHAR2,    -- 更新後の値
+    p_result     OUT NUMBER       -- 戻り値（1:更新成功, 0:一致せず, -1:例外）
+)
 
+```sql
+CREATE OR REPLACE PROCEDURE update_with_lock_proc (
+    p_id         IN  NUMBER,
+    p_old_value  IN  VARCHAR2,
+    p_new_value  IN  VARCHAR2,
+    p_result     OUT NUMBER
+)
+IS
+    v_dummy VARCHAR2(1);
+BEGIN
+    -- ロック確認
+    SELECT 'X'
+    INTO v_dummy
+    FROM your_table
+    WHERE id = p_id
+    FOR UPDATE NOWAIT;
+
+    -- 更新処理
+    UPDATE your_table
+    SET column_value = p_new_value
+    WHERE id = p_id
+      AND column_value = p_old_value;
+
+    -- 戻り値設定
+    IF SQL%ROWCOUNT = 0 THEN
+        p_result := 0;
+    ELSE
+        p_result := 1;
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        p_result := -1;
+        ROLLBACK;
+
+        INSERT INTO error_log (
+            error_time, error_message, procedure_name
+        ) VALUES (
+            SYSDATE, SQLERRM, 'update_with_lock_proc'
+        );
+END;
+```
 
 
 
